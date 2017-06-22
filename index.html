@@ -1,0 +1,160 @@
+<html>
+  <head>
+    <title>Simon Dice</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="dist/sweetalert.css">
+    <link rel="stylesheet" href="css/estilos.css">
+
+  </head>
+  <body>
+    <div class="keyboard">
+        <div class="row">
+            <div class="key" data-key="81">q</div>
+            <div class="key" data-key="87">w</div>
+            <div class="key" data-key="69">e</div>
+            <div class="key" data-key="82">r</div>
+            <div class="key" data-key="84">t</div>
+            <div class="key" data-key="89">y</div>
+            <div class="key" data-key="85">u</div>
+            <div class="key" data-key="73">i</div>
+            <div class="key" data-key="79">o</div>
+            <div class="key" data-key="80">p</div>
+        </div>
+        <div class="row">
+            <div class="key" data-key="65">a</div>
+            <div class="key" data-key="83">s</div>
+            <div class="key" data-key="68">d</div>
+            <div class="key" data-key="70">f</div>
+            <div class="key" data-key="71">g</div>
+            <div class="key" data-key="72">h</div>
+            <div class="key" data-key="74">j</div>
+            <div class="key" data-key="75">k</div>
+            <div class="key" data-key="76">l</div>
+        </div>
+        <div class="row last">
+            <div class="key" data-key="90">z</div>
+            <div class="key" data-key="88">x</div>
+            <div class="key" data-key="67">c</div>
+            <div class="key" data-key="86">v</div>
+            <div class="key" data-key="66">b</div>
+            <div class="key" data-key="78">n</div>
+            <div class="key" data-key="77">m</div>
+        </div>
+    </div>
+    <script src="dist/sweetalert.min.js"></script>
+    <script>
+    const niveles = 15
+
+    let keys = generarTeclas(niveles)
+
+    function siguienteNivel(nivelActual) {
+      if(nivelActual == niveles){
+        return swal({
+          title: 'Ganaste!',
+          type: 'success'
+        })
+      }
+
+      swal({
+        timer: 1000,
+        title: `Nivel ${nivelActual + 1}`,
+        showConfirmButton: false
+      })
+
+      for (let i = 0; i <= nivelActual; i++) {
+        setTimeout(() => activate(keys[i]),
+        1000 * (i+1) + 1000)
+        // Entonces aca necesitamos que se iluminen en orden y no todas al tiempo
+        // entonces hacemos una operacion en el segundo parametro del tiempo
+        // hacemos que 1ms * lo que tenga i+1
+      }
+
+      let i = 0
+
+      let teclaActual = keys[i]
+
+      window.addEventListener('keydown', onkeydown)
+
+      function onkeydown(ev) {
+        if(ev.keyCode == teclaActual){
+          activate(teclaActual, { success: true})
+          i++
+          if (i > nivelActual){
+            window.removeEventListener('keydown', onkeydown)
+            setTimeout(() => siguienteNivel(i),1500)
+          }
+          teclaActual = keys[i]
+        } else {
+          activate(ev.keyCode, { fail: true})
+          window.removeEventListener('keydown', onkeydown)
+          setTimeout(() => swal({
+            title: 'Perdiste',
+            text: 'Quieres jugar de nuevo?',
+            showCancelButton: true,
+            confirmButtonText: 'Si',
+            cancelButtonText: 'No',
+          }, function (ok) {
+            if(ok){
+              teclas = generarTeclas(niveles)
+              siguienteNivel(0)
+            }
+          }), 1200)
+
+        }
+      }
+
+    }
+
+    siguienteNivel(0)
+
+    function generarTeclas(niveles) {
+      // Entonces necesitamos retornar un array de el numero de niveles que queremos
+      // y le damos .fill para llenarlo por que el .map solo sirve cuando el array esta
+      // lleno, ya que se ejecuta por cada uno de los elementos, entonces primero lo llenamos
+      // con 0 y despues por cada elemento llamamos la funcion generarTeclaAleatoria
+      return new Array(niveles).fill(0).map(generarTeclaAleatoria)
+    }
+
+    function generarTeclaAleatoria(){
+      const min = 65
+      const max = 90
+
+      return Math.round(Math.random() * (max - min) + min)
+    }
+
+    // Esta funcion es creada propiamente para obtener el elemento por el
+    // keyCode
+      function getElementByKeyCode(keyCode){
+        // Cuando esta funcion se llamae lo que hara es obtener un elemento
+        // segun un atributo que tenga, Esta es querySelector(), Entre parentesis
+        // va el atributo o clase con la que queremos obtener el elemento.
+        // para obtener clases lo hacemos '.clase' y para obtener un atributo
+        // lo usamos asi como esta abajo
+        return document.querySelector(`[data-key="${keyCode}"]`)
+      }
+      // Los elementos del DOM en js tambien son objetos, entonces podemos
+      // manipularlos como tal y guardarlos en variables
+
+      function activate(keyCode, opts ={}) {
+        // Guardamos el elemento del DOM en una variable
+        const el = getElementByKeyCode(keyCode)
+        // Luuego le agregamos clases a los elementos asi
+        el.classList.add('active')
+        // Preguntamos que si el elemento opts.succes es true agrege la clase
+        // succes de lo contrario agregue la clase fail
+        if(opts.success){
+          el.classList.add('success')
+        }else if (opts.fail){
+          el.classList.add('fail')
+        }
+        setTimeout(() => deactivate(el),500)
+      }
+
+      function deactivate(el) {
+        // Esto lo que hace es que al elemento el, le agrega solamente la clase
+        // key y la limpia de las demas que tenia
+        el.className = 'key'
+      }
+    </script>
+  </body>
+</html>
